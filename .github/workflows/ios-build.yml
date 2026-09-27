@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 75
     env:
       VARIANT: ${{ github.event.inputs.variant || 'release' }}
@@ -29,6 +29,12 @@ jobs:
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
+
+      - name: Check Xcode version (Expo SDK 57 needs 26.4+)
+        run: |
+          V=$(xcodebuild -version | awk 'NR==1{print $2}')
+          echo "Xcode $V"
+          printf '%s\n26.4\n' "$V" | sort -V -C -r || { echo "::error::Xcode $V is older than 26.4"; exit 1; }
 
       - uses: actions/setup-node@v4
         with:
