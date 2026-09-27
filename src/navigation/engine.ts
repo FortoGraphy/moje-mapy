@@ -134,7 +134,11 @@ export function stopNavigation() {
   s?.unsub();
   s = null;
   stopSpeech();
-  deactivateKeepAwake(KEEP_AWAKE_TAG);
+  try {
+    deactivateKeepAwake(KEEP_AWAKE_TAG).catch(() => {});
+  } catch {
+    // web throws synchronously when the lock was never granted
+  }
   releaseBackground("navigation").catch(() => {});
   useNav.setState({ active: false, route: null, progress: null, offRoute: false, rerouting: false, arrived: false });
   useRouting.getState().clear();

@@ -31,6 +31,14 @@ import { colors, radius, shadow, space, type } from "@/theme";
 const KEEP_AWAKE_TAG = "map";
 const NAV_BANNER_SPACE = 128;
 
+function releaseKeepAwake() {
+  try {
+    deactivateKeepAwake(KEEP_AWAKE_TAG).catch(() => {});
+  } catch {
+    // web throws synchronously when the lock was never granted
+  }
+}
+
 /** Name of the ride / GPX track currently drawn on the map, with a button to hide it. */
 function ShownTrack() {
   const track = useTracks((s) => s.track);
@@ -67,9 +75,9 @@ export default function Home() {
 
   useEffect(() => {
     if (keepAwake) activateKeepAwakeAsync(KEEP_AWAKE_TAG).catch(() => {});
-    else deactivateKeepAwake(KEEP_AWAKE_TAG);
+    else releaseKeepAwake();
     return () => {
-      deactivateKeepAwake(KEEP_AWAKE_TAG);
+      releaseKeepAwake();
     };
   }, [keepAwake]);
 

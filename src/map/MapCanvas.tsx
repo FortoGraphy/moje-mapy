@@ -38,7 +38,6 @@ import {
   accessLayers,
   buildings3dLayer,
   contourLayers,
-  hillshadeLayer,
   maxspeedQueryLayer,
   type OverlayLayer,
   poiLayers,
@@ -132,14 +131,14 @@ export const MapCanvas = memo(function MapCanvas() {
   const hasOutdoor = resolved.sources.outdoor != null;
 
   const style = useMemo(
-    () => buildStyle({ styleId, sources: resolved.sources, glyphs: glyphsUrl(), lang, textScale }),
-    [styleId, resolved, lang, textScale],
+    () =>
+      buildStyle({ styleId, sources: resolved.sources, glyphs: glyphsUrl(), lang, textScale, hillshade: overlays.hillshade }),
+    [styleId, resolved, lang, textScale, overlays.hillshade],
   );
 
   const palette = PALETTES[styleId];
   const layers = useMemo(() => {
     const out: OverlayLayer[] = [];
-    if (overlays.hillshade) out.push(hillshadeLayer(palette));
     if (overlays.contours && hasOutdoor) out.push(...contourLayers(palette, textScale));
     if (overlays.buildings3d) out.push(buildings3dLayer(palette));
     if (overlays.tracks) out.push(...(hasOutdoor ? trackLayers(palette) : trackFallbackLayers(palette)));

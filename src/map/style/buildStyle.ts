@@ -37,6 +37,23 @@ export interface BuildStyleOptions {
   glyphs: string;
   lang: Lang;
   textScale: number;
+  /** Hillshade must live in the style JSON: MapLibre RN crashes on iOS when hillshade paint is set as layer props. */
+  hillshade?: boolean;
+}
+
+export function hillshadeSpec(p: Palette): Json {
+  return {
+    id: "ov-hillshade",
+    type: "hillshade",
+    source: "dem",
+    paint: {
+      "hillshade-exaggeration": p.hillshadeExaggeration,
+      "hillshade-shadow-color": p.hillshadeShadow,
+      "hillshade-highlight-color": p.hillshadeHighlight,
+      "hillshade-accent-color": p.hillshadeAccent,
+      "hillshade-illumination-direction": 315,
+    },
+  };
 }
 
 export const zi = (base: number, ...stops: number[]): Json => ["interpolate", ["exponential", base], ["zoom"], ...stops];
@@ -490,6 +507,11 @@ export function buildStyle(o: BuildStyleOptions): StyleSpecification {
       paint: { "text-color": p.textDim, ...halo, "text-halo-width": 1.6 },
     },
   ];
+
+  if (o.hillshade) {
+    const at = layers.findIndex((l) => l.id === ANCHORS.hillshade);
+    layers.splice(at < 0 ? 1 : at, 0, hillshadeSpec(p));
+  }
 
   return {
     version: 8,

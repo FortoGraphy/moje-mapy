@@ -2,7 +2,7 @@ import type { Lang } from "@/i18n";
 import { POI_CATEGORIES, POI_CATEGORY_COLORS, POI_CLASS_TO_CATEGORY, type PoiCategory } from "@/map/poiCategories";
 import { POI_ICON_CLASSES } from "@/map/icons.generated";
 
-import { ANCHORS, FONT_ITALIC, FONT_REGULAR, nameExpr, zi } from "./buildStyle";
+import { ANCHORS, FONT_ITALIC, FONT_REGULAR, hillshadeSpec, nameExpr, zi } from "./buildStyle";
 import { TRACK_COLORS as C, type Palette } from "./palette";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -259,20 +259,9 @@ export function contourLayers(p: Palette, textScale: number): OverlayLayer[] {
   ];
 }
 
+/** For style tooling only; the app puts hillshade into the style JSON via buildStyle({ hillshade }). */
 export function hillshadeLayer(p: Palette): OverlayLayer {
-  return {
-    id: "ov-hillshade",
-    type: "hillshade",
-    source: "dem",
-    beforeId: ANCHORS.hillshade,
-    paint: {
-      "hillshade-exaggeration": p.hillshadeExaggeration,
-      "hillshade-shadow-color": p.hillshadeShadow,
-      "hillshade-highlight-color": p.hillshadeHighlight,
-      "hillshade-accent-color": p.hillshadeAccent,
-      "hillshade-illumination-direction": 315,
-    },
-  };
+  return { ...hillshadeSpec(p), beforeId: ANCHORS.hillshade };
 }
 
 export function buildings3dLayer(p: Palette): OverlayLayer {
