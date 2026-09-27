@@ -1,0 +1,84 @@
+{
+  "expo": {
+    "name": "Moje Mapy",
+    "slug": "moje-mapy",
+    "scheme": "mojemapy",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B0E13",
+    "ios": {
+      "bundleIdentifier": "cz.johny.mojemapy",
+      "supportsTablet": false,
+      "buildNumber": "1",
+      "infoPlist": {
+        "UIBackgroundModes": ["location", "audio"],
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIRequiresFullScreen": true,
+        "CFBundleAllowMixedLocalizations": true
+      }
+    },
+    "android": {
+      "package": "cz.johny.mojemapy",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B0E13",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-sharing",
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": ["cs", "en"]
+          }
+        }
+      ],
+      "expo-asset",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#0B0E13"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Moje Mapy používá polohu pro zobrazení na mapě, navigaci a tachometr.",
+          "locationAlwaysAndWhenInUsePermission": "Moje Mapy potřebuje polohu i na pozadí, aby mohla nahrávat jízdu a navigovat se zamčeným displejem.",
+          "isIosBackgroundLocationEnabled": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Moje Mapy potřebuje přístup k fotkám, abys mohl přidat fotku k bodu na trase.",
+          "cameraPermission": "Moje Mapy potřebuje fotoaparát, abys mohl vyfotit místo během jízdy.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-file-system",
+        {
+          "enableFileSharing": true,
+          "supportsOpeningDocumentsInPlace": false
+        }
+      ],
+      "@maplibre/maplibre-react-native"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

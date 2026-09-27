@@ -1,0 +1,88 @@
+name: Offline map data (build + upload to R2)
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "ID zemí oddělené čárkou (prázdné = podle countries.json)"
+        required: false
+        default: ""
+      upload:
+        description: "Nahrát na Cloudflare R2"
+        type: boolean
+        default: true
+  schedule:
+    - cron: "0 3 1 * *"
+
+concurrency:
+  group: map-data
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    env:
+      ONLY: ${{ github.event.inputs.only }}
+      JAVA_MEM: 5g
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: System tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq osmium-tool gdal-bin python3-gdal python3-numpy python3-scipy \
+            python3-pil python3-shapely jq build-essential libsqlite3-dev zlib1g-dev
+          git clone --depth 1 https://github.com/felt/tippecanoe /tmp/tippecanoe
+          make -C /tmp/tippecanoe -j"$(nproc)" >/dev/null && sudo make -C /tmp/tippecanoe install >/dev/null
+          URL=$(curl -s https://api.github.com/repos/protomaps/go-pmtiles/releases/latest \
+            | jq -r '.assets[] | select(.name | test("Linux_x86_64")) | .browser_download_url')
+          curl -fsSL "$URL" | sudo tar -xz -C /usr/local/bin pmtiles
+          pmtiles version || true
+          tippecanoe --version
+
+      - name: Cache Planetiler sources + Terrarium tiles
+        uses: actions/cache@v4
+        with:
+          path: |
+            pipeline/work/data/sources
+            pipeline/work/terrarium
+            pipeline/work/planetiler.jar
+          key: mapdata-sources-${{ hashFiles('pipeline/countries.json') }}-${{ github.run_id }}
+          restore-keys: mapdata-sources-
+
+      - name: Build
+        run: bash pipeline/build.sh
+
+      - name: Upload to Cloudflare R2
+        if: github.event_name == 'schedule' || github.event.inputs.upload == 'true'
+        env:
+          RCLONE_CONFIG_R2_TYPE: s3
+          RCLONE_CONFIG_R2_PROVIDER: Cloudflare
+          RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          RCLONE_CONFIG_R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          RCLONE_CONFIG_R2_ACL: private
+          RCLONE_CONFIG_R2_NO_CHECK_BUCKET: "true"
+        run: |
+          curl -fsSL https://rclone.org/install.sh | sudo bash >/dev/null
+          rclone copy pipeline/out/regions "r2:${{ secrets.R2_BUCKET }}/regions" \
+            --transfers 6 --s3-upload-cutoff 200M --s3-chunk-size 64M --checksum --stats 60s
+          rclone copyto pipeline/out/regions.geojson "r2:${{ secrets.R2_BUCKET }}/regions.geojson"
+          rclone copyto pipeline/out/catalog.json "r2:${{ secrets.R2_BUCKET }}/catalog.json" \
+            --header-upload "Cache-Control: no-cache"
+
+      - name: Summary
+        run: |
+          echo "### Offline data" >> "$GITHUB_STEP_SUMMARY"
+          jq -r '.regions[] | "- \(.id): \(.size / 1048576 | floor) MB"' pipeline/out/catalog.json >> "$GITHUB_STEP_SUMMARY"

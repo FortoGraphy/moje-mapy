@@ -1,0 +1,48 @@
+[
+  {
+    "id": "cz",
+    "enabled": true,
+    "name": { "cs": "Česko", "en": "Czechia" },
+    "geofabrik": "europe/czech-republic",
+    "iso": "CZ",
+    "region_level": "6",
+    "district_level": "7",
+    "region_name_regex": "kraj|Praha",
+    "district_name_regex": "^okres ",
+    "region_label": { "cs": "kraj", "en": "region" },
+    "district_label": { "cs": "okres", "en": "district" }
+  },
+  {
+    "id": "sk",
+    "enabled": false,
+    "name": { "cs": "Slovensko", "en": "Slovakia" },
+    "geofabrik": "europe/slovakia",
+    "iso": "SK",
+    "region_level": "4",
+    "district_level": "8",
+    "region_label": { "cs": "kraj", "en": "region" },
+    "district_label": { "cs": "okres", "en": "district" }
+  },
+  {
+    "id": "at",
+    "enabled": false,
+    "name": { "cs": "Rakousko", "en": "Austria" },
+    "geofabrik": "europe/austria",
+    "iso": "AT",
+    "region_level": "4",
+    "district_level": "6",
+    "region_label": { "cs": "spolková země", "en": "state" },
+    "district_label": { "cs": "okres", "en": "district" }
+  },
+  {
+    "id": "pl",
+    "enabled": false,
+    "name": { "cs": "Polsko", "en": "Poland" },
+    "geofabrik": "europe/poland",
+    "iso": "PL",
+    "region_level": "4",
+    "district_level": "6",
+    "region_label": { "cs": "vojvodství", "en": "voivodeship" },
+    "district_label": { "cs": "okres", "en": "county" }
+  }
+]
