@@ -27,6 +27,7 @@ import { useOnline } from "@/utils/online";
 import { cameraRef, mapRef } from "./controller";
 import { glyphsUrl } from "./glyphs";
 import { MAP_ICONS } from "./icons.generated";
+import { HillshadeLayers, noteCameraMoved } from "./layers/HillshadeLayers";
 import { RouteLayers } from "./layers/RouteLayers";
 import { PinLayers } from "./layers/PinLayers";
 import { TrackLayers } from "./layers/TrackLayers";
@@ -161,6 +162,7 @@ export const MapCanvas = memo(function MapCanvas() {
   const onRegionDidChange = useCallback(
     (e: NativeSyntheticEvent<ViewStateChangeEvent>) => {
       const { center, zoom, bearing, pitch } = e.nativeEvent;
+      noteCameraMoved();
       useUi.getState().setView({ center: [center[0], center[1]], zoom, bearing, pitch });
       if (zoom >= 5) {
         const r = regionAt(useOffline.getState().downloaded, [center[0], center[1]]);
@@ -240,6 +242,7 @@ export const MapCanvas = memo(function MapCanvas() {
         onTrackUserLocationChange={onTrackChange}
       />
       <Images images={MAP_ICONS} />
+      <HillshadeLayers />
       <OverlayLayers layers={layers} />
       <TrackLayers />
       <RouteLayers />

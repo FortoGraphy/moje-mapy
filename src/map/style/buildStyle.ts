@@ -41,11 +41,20 @@ export interface BuildStyleOptions {
   hillshade?: boolean;
 }
 
-export function hillshadeSpec(p: Palette): Json {
+/**
+ * Two identical hillshade layers; only one is visible at a time. MapLibre native keeps a per-tile
+ * render target alive for as long as a hillshade layer stays renderable and re-renders all of them
+ * every frame with a blocking GPU wait, so the map slows down the more tiles have been visited.
+ * Hiding a layer drops its render targets; see src/map/layers/HillshadeLayers.tsx.
+ */
+export const HILLSHADE_IDS = ["ov-hillshade", "ov-hillshade-b"] as const;
+
+export function hillshadeSpec(p: Palette, id: string = HILLSHADE_IDS[0], visible = true): Json {
   return {
-    id: "ov-hillshade",
+    id,
     type: "hillshade",
     source: "dem",
+    layout: { visibility: visible ? "visible" : "none" },
     paint: {
       "hillshade-exaggeration": p.hillshadeExaggeration,
       "hillshade-shadow-color": p.hillshadeShadow,
@@ -508,10 +517,13 @@ export function buildStyle(o: BuildStyleOptions): StyleSpecification {
     },
   ];
 
-  if (o.hillshade) {
-    const at = layers.findIndex((l) => l.id === ANCHORS.hillshade);
-    layers.splice(at < 0 ? 1 : at, 0, hillshadeSpec(p));
-  }
+  const at = layers.findIndex((l) => l.id === ANCHORS.hillshade);
+  layers.splice(
+    at < 0 ? 1 : at,
+    0,
+    hillshadeSpec(p, HILLSHADE_IDS[0], !!o.hillshade),
+    hillshadeSpec(p, HILLSHADE_IDS[1], false),
+  );
 
   return {
     version: 8,

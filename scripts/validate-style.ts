@@ -11,7 +11,6 @@ import {
   maxspeedQueryLayer,
   trackFallbackLayers,
   contourLayers,
-  hillshadeLayer,
   poiLayers,
   trackLayers,
 } from "../src/map/style/overlays";
@@ -25,6 +24,7 @@ for (const styleId of ["enduro", "road", "topo"] as const) {
       styleId,
       lang,
       textScale: 1.2,
+      hillshade: true,
       glyphs: "file:///glyphs/{fontstack}/{range}.pbf",
       sources: {
         base: "https://tiles.openfreemap.org/planet",
@@ -35,7 +35,6 @@ for (const styleId of ["enduro", "road", "topo"] as const) {
     const p = PALETTES[styleId];
     const enabled = Object.fromEntries(POI_CATEGORIES.map((c, i) => [c, i % 3 !== 0])) as never;
     const overlays = [
-      hillshadeLayer(p),
       ...contourLayers(p, 1),
       ...trackLayers(p),
       ...accessLayers(),

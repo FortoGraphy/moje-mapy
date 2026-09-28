@@ -34,7 +34,8 @@ export function resolveSources(opts: {
   const remoteOutdoorPath = catalog?.online.outdoor;
   const remoteOutdoorUrl = remoteOutdoorPath ? dataUrl(remoteOutdoorPath) : null;
   const remoteOutdoor = remoteOutdoorUrl ? `pmtiles://${remoteOutdoorUrl}` : null;
-  const onlineTerrain = { tiles: [CONFIG.terrariumTiles], maxzoom: 15 };
+  // Matches the offline terrain packs; the underlying DEM (~25 m) gains nothing from z13+ tiles.
+  const onlineTerrain = { tiles: [CONFIG.terrariumTiles], maxzoom: 12 };
 
   const useLocal = region != null && (!online || preferOffline);
   if (useLocal && region) {
