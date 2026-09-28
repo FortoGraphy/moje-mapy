@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Line } from "react-native-svg";
+import { useShallow } from "zustand/react/shallow";
 
 import {
   Buildings,
@@ -64,11 +65,19 @@ export function MapMenuSheet() {
   const insets = useSafeAreaInsets();
   const open = useUi((s) => s.menuOpen);
   const source = useUi((s) => s.source);
-  const s = useSettings();
+  // trips and lastCamera change every GPS fix / camera move and are not shown here
+  const s = useSettings(useShallow(({ trips: _t, lastCamera: _c, ...rest }) => rest));
+  const presented = useRef(false);
 
   useEffect(() => {
-    if (open) ref.current?.present();
-    else ref.current?.dismiss();
+    if (open && !presented.current) {
+      presented.current = true;
+      ref.current?.present();
+    } else if (!open && presented.current) {
+      // dismiss() on a never-presented modal leaves it stuck in "dismissing" and later present() calls no-op
+      presented.current = false;
+      ref.current?.dismiss();
+    }
   }, [open]);
 
   const allPoi = POI_CATEGORIES.every((c) => s.poiCategories[c]);
@@ -80,7 +89,10 @@ export function MapMenuSheet() {
       snapPoints={["62%", "92%"]}
       enableDynamicSizing={false}
       backdropComponent={Backdrop}
-      onDismiss={() => useUi.getState().setMenuOpen(false)}
+      onDismiss={() => {
+        presented.current = false;
+        useUi.getState().setMenuOpen(false);
+      }}
     >
       <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: space.lg, paddingBottom: insets.bottom + 32 }}>
         <Text style={type.h2}>{t("map.menu")}</Text>

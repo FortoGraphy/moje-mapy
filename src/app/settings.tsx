@@ -4,6 +4,7 @@ import * as Speech from "expo-speech";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useShallow } from "zustand/react/shallow";
 
 import {
   CloudArrowDown,
@@ -24,7 +25,7 @@ const TOLERANCES = [0, 5, 10, 15];
 export default function SettingsScreen() {
   const t = useT();
   const insets = useSafeAreaInsets();
-  const s = useSettings();
+  const s = useSettings(useShallow(({ trips: _t, lastCamera: _c, ...rest }) => rest));
   const [brouter, setBrouter] = useState(s.brouterUrl);
 
   const commitBrouter = () => {

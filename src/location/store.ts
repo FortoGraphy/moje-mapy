@@ -3,7 +3,7 @@ import { create } from "zustand";
 
 import { useSettings } from "@/store/settings";
 import type { Fix } from "@/types";
-import { haversine } from "@/utils/geo";
+import { angleDiff, haversine } from "@/utils/geo";
 
 export type Permission = "undetermined" | "granted" | "denied";
 
@@ -114,11 +114,18 @@ export async function startForegroundWatch() {
   const last = await Location.getLastKnownPositionAsync().catch(() => null);
   if (last && !useLocation.getState().fix) useLocation.setState({ fix: locationToFix(last) });
   posSub = await Location.watchPositionAsync(
-    { accuracy: Location.Accuracy.BestForNavigation, timeInterval: 1000, distanceInterval: 0 },
+    // BestForNavigation adds sensor fusion that is meant for plugged-in devices and heats the phone up.
+    { accuracy: Location.Accuracy.Highest, timeInterval: 1000, distanceInterval: 0 },
     (l) => ingestFix(locationToFix(l)),
   );
+  let headingAt = 0;
   headSub = await Location.watchHeadingAsync((h) => {
     const v = h.trueHeading >= 0 ? h.trueHeading : h.magHeading;
+    const prev = useLocation.getState().heading;
+    const now = Date.now();
+    // The compass fires many times per second; the UI only needs a few degree-level updates.
+    if (prev != null && (now - headingAt < 250 || Math.abs(angleDiff(prev, v)) < 2)) return;
+    headingAt = now;
     useLocation.setState({ heading: v });
   });
   staleTimer = setInterval(() => {

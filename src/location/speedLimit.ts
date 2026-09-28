@@ -1,4 +1,5 @@
 import * as Speech from "expo-speech";
+import { AppState } from "react-native";
 import { create } from "zustand";
 
 import { haptic } from "@/components/ui";
@@ -7,6 +8,7 @@ import { mapRef } from "@/map/controller";
 import { MAXSPEED_QUERY_LAYER } from "@/map/style/overlays";
 import { useNav } from "@/navigation/store";
 import { useSettings } from "@/store/settings";
+import { useUi } from "@/store/ui";
 import { angleDiff, bearing } from "@/utils/geo";
 
 import { parseMaxspeed } from "./maxspeed";
@@ -19,6 +21,7 @@ interface LimitState {
 
 export const useSpeedLimit = create<LimitState>()(() => ({ limit: null, speeding: false }));
 
+const QUERY_MIN_SPEED = 2; // m/s
 let timer: ReturnType<typeof setInterval> | null = null;
 let lastAlert = 0;
 let lastFound = 0;
@@ -41,9 +44,15 @@ function lineBearingNear(coords: number[][], p: [number, number]): number | null
 }
 
 async function queryMapLimit(): Promise<number | null | undefined> {
-  const fix = useLocation.getState().fix;
+  const { fix, displaySpeed } = useLocation.getState();
   const map = mapRef.current;
-  if (!fix || !map) return undefined;
+  // queryRenderedFeatures runs on the UI thread; skip it when it cannot or need not find anything.
+  if (!fix || !map || !useUi.getState().source.outdoor) return undefined;
+  if (displaySpeed < QUERY_MIN_SPEED || AppState.currentState !== "active") {
+    // Standing still: keep showing the last limit instead of letting it expire.
+    lastFound = Date.now();
+    return undefined;
+  }
   try {
     const pt = await map.project([fix.lon, fix.lat]);
     const r = 18;
